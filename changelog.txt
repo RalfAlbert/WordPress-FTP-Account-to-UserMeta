@@ -1,0 +1,7 @@
+CHANGELOG:
+
+20.05.2012
+	v0.1.1	- Change cleanup after plugin uninstall
+	
+19.05.2012
+	v0.1	- First release.

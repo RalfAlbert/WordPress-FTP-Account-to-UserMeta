@@ -17,7 +17,7 @@
  * Plugin Name:	FTP-Account to UserMeta
  * Plugin URI:	https://github.com/RalfAlbert/WordPress-FTP-Account-to-UserMeta
  * Description:	This plugin add a couple of fields to your user-profile to enter your ftp-account data. This will prevent to re-entering your ftp-account data everytime WordPress request them.
- * Version: 	0.1
+ * Version: 	0.1.1
  * Author: 		Ralf Albert
  * Author URI: 	http://yoda.neun12.de
  * Text Domain: ftp2um
@@ -76,17 +76,10 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 
 		/**
 		 * 
-		 * The metakey to save the ftp-credentials in DB
+		 * The metakey to save the ftp-credentials in usermeta
 		 * @var string
 		 */
 		const METAKEY = 'FTP_Credentials';
-		
-		/**
-		 * 
-		 * The key for storing data in options-db
-		 * @var string
-		 */
-		const OPTIONSKEY = 'WPFTP2DB';
 		
 		/**
 		 * 
@@ -94,6 +87,13 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 * @var string
 		 */
 		private static $lang = 'ftp2um';
+		
+		/**
+		 * 
+		 * Array for data from plugin-header
+		 * @var array $plugin_data
+		 */
+		private $plugin_data = array();
 
 		/**
 		 * 
@@ -159,13 +159,6 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			
 			new WP_Environment_Check( $v );
 			
-			// create a option-field in database for user-history if it was not created in a previous activation
-			$opt = get_option( self::OPTIONSKEY );
-			
-			if( empty( $opt ) ){
-				add_option( self::OPTIONSKEY, array() );
-			}
-			
 		}
 		
 		/**
@@ -184,15 +177,16 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 */
 		public static function uninstall_plugin(){
 			
-			// remove the user-history and the ftp-credentials from db
-			$ftpusers = get_option( self::OPTIONSKEY );
+			global $wpdb;
 			
-			foreach( $ftpusers as $user_id )
-				delete_user_meta( $user_id, self::METAKEY );
-				
-			// remove the option itself
-			delete_option( self::OPTIONSKEY );
-
+			$wpdb->query( 
+				$wpdb->prepare( 
+					"DELETE FROM $wpdb->usermeta
+					 WHERE meta_key = '%s'",
+					self::METAKEY
+				)
+			);
+			
 		} 
 		
 		/**
@@ -365,12 +359,10 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			// get the ftp-credentials from database
 			$creds = unserialize( get_user_meta( $user->ID, self::METAKEY, TRUE ) );
 			
-			// create the hostname for the form
-			$hostname_attr = sprintf( '%s:%s', $creds['hostname'], $creds['port'] );
-			// if no hostname and no port, blank hostname
-			if( empty( $creds['hostname'] ) )
-				$hostname_attr = '';
-				
+			// create the hostname for the formular
+			// if no hostname (and no port) was found, blank hostname & port
+			$hostname_attr = ! empty( $creds['hostname'] ) ? sprintf( '%s:%s', $creds['hostname'], $creds['port'] ) : '';
+							
 			// initialize the vars for the table
 			$args = new stdClass();
 			
@@ -410,7 +402,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 
 		/**
 		 * 
-		 * Save the data in the database
+		 * Save the data in the usermeta
 		 * @param integer $user_id
 		 * @access public
 		 * @since 0.1
@@ -445,21 +437,13 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 				)
 			);
 			
-			// save the user-id for history. on plugin-uninstall, we can delete the ftp-credentials from the usermetas of each user who saved some
-			$ftpusers = get_option( self::OPTIONSKEY );
-
-			// only update the options if the user wasn't stored yet
-			if( ! in_array( $user_id, $ftpusers ) ){
-				array_push( $ftpusers, $user_id );
-				update_option( self::OPTIONSKEY, $ftpusers );
-			}
-			
 		}
 		
 		/**
 		 * 
 		 * Retrieve the ftp-credentials from the usermeta and serve them
 		 * to the WordPress function "request_filesystem_credentials"
+		 * If the user does not saved some ftp-account data, the formular to entering them will be displayed
 		 * @access public
 		 * @since 0.1
 		 */
