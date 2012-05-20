@@ -250,7 +250,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			load_plugin_textdomain( 
 				$this->get_plugin_data( 'TextDomain' ), 
 				FALSE, 
-				dirname( plugin_basename( __FILE__ ) ) . $this->get_plugin_data( 'DomainPath' )
+				dirname( plugin_basename( __FILE__ ) ) . $this->get_plugin_data( 'DomainPath' ) . '/'
 			);
 			
 			self::$lang = $this->get_plugin_data( 'TextDomain' );
@@ -265,18 +265,18 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 * @param string $value
 		 * @return string | array Value from the pluginheader or array with all values (if no $value is requested)
 		 */
-		protected function get_plugin_data( $value = NULL ) {
+		protected function get_plugin_data( $value = '' ) {
 			
-			if ( ! function_exists( 'get_plugin_data' ) )
-				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+			if( empty( $this->plugin_data ) ){
+				
+				if ( ! function_exists( 'get_plugin_data' ) )
+					require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 			
-			if( empty( $this->plugin_data ) )
 				$this->plugin_data = get_plugin_data( __FILE__ );
+				
+			}
 			
-			if( empty( $value ) )
-				return $this->plugin_data;
-			else		
-				return $this->plugin_data[$value];
+			return empty( $value ) ? $this->plugin_data : $this->plugin_data[$value];
 
 		}
 
