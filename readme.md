@@ -9,3 +9,6 @@ Kudos
 Some parts of this code are originally by Frank Bueltge [www.bueltge.de]
 
 Inspiration by discussion from Sergej Mueller [http://playground.ebiene.de]
+
+Feedback from:
+Franz-Josef Kaiser [https://github.com/franz-josef-kaiser]

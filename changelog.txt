@@ -1,5 +1,11 @@
 CHANGELOG:
 
+23.05.2012
+	v0.1.2
+		- remove methods loadtextdomain and get:plugin_data for more simplicity
+		- using current_user_can instead of $user->has_cap() to decide if the plugin should start or not
+		- move add_filter( 'request_filesystem_credentials' ) to method add_admin_hooks()
+
 20.05.2012
 	v0.1.1	- Change cleanup after plugin uninstall
 	

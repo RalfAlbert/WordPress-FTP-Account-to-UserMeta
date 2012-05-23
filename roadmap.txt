@@ -1,0 +1,6 @@
+v0.2
+	- Adding a admin-page 
+	- Sharing a ftp-account between different users
+	
+v0.3
+	- SFTP

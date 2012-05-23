@@ -1,6 +1,6 @@
 <?php
 /**
- * WordPress Plugin to store the ftp-account data in the WordPress database
+ * WordPress Plugin to store ftp-account data in the WordPress database
  *
  * PHP version 5.3
  *
@@ -86,7 +86,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 * Constant for textdomain
 		 * @var string
 		 */
-		private static $lang = 'ftp2um';
+		const LANG = 'ftp2um';
 		
 		/**
 		 * 
@@ -107,7 +107,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 * ID for ftp-hostname in formular
 		 * @var string $ftp_host
 		 */
-		protected $ftp_host	= 'ftp_host';
+		protected $ftp_host = 'ftp_host';
 		
 		/**
 		 * 
@@ -121,7 +121,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 * ID for ftp-password in formular
 		 * @var string $ftp_pass
 		 */
-		protected $ftp_pass	= 'ftp_pass'; 
+		protected $ftp_pass = 'ftp_pass'; 
 		
 		/**
 		 * 
@@ -130,11 +130,15 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 * @since 0.1
 		 */
 		public static function plugin_start(){
+			/*
+			 * In some circumstances, the global current user is not yet defined.
+			 * If you experience problems with this, try declaring the global $current_user and
+			 * using user_can($current_user->ID, $capability) - this seems to work more consistently. 
+			 */
 			
-			// start the plugin only in backend an d if the user have the minimum role/capability
-			$user = wp_get_current_user();
 			
-			if( is_admin() && $user->has_cap( self::MIN_LEVEL ) )
+			// start the plugin only in backend and if the user have the minimum role/capability			
+			if( is_admin() && current_user_can( self::MIN_LEVEL ) )
 				new self();
 				
 			unset( $user );
@@ -179,6 +183,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			
 			global $wpdb;
 			
+			// remove the entries in usermeta done by the plugin
 			$wpdb->query( 
 				$wpdb->prepare( 
 					"DELETE FROM $wpdb->usermeta
@@ -201,16 +206,16 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			// initialize the autoloader
 			self::init_autoloader();
 			
-			// load the textdomain via annotation
-			$this->loadtextdomain();
-			
+			// load the textdomain
+			load_plugin_textdomain( 
+				self::LANG, 
+				FALSE, 
+				dirname( plugin_basename( __FILE__ ) ) . '/languages/'
+			);
+						
 			// hook all actions for backend
 			add_action( 'admin_init', array( &$this, 'add_admin_hooks' ) );
 			
-			// add a filter to 'request_filesystem_credentials' so we can override the 
-			// request-credentials-formular
-			add_filter( 'request_filesystem_credentials', array( &$this, 'ftp_credentials' ), 1, 0 );
-				
 		}
 				
 		/**
@@ -238,48 +243,7 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			new WP_Autoloader( $config );
 			
 		}
-
-		/**
-		 * 
-		 * Load textdomain via annotation
-		 * @since 1.0
-		 * @access public
-		 */
-		protected function loadtextdomain(){
-			
-			load_plugin_textdomain( 
-				$this->get_plugin_data( 'TextDomain' ), 
-				FALSE, 
-				dirname( plugin_basename( __FILE__ ) ) . $this->get_plugin_data( 'DomainPath' ) . '/'
-			);
-			
-			self::$lang = $this->get_plugin_data( 'TextDomain' );
-			
-		}
 		
-		/**
-		 * 
-		 * Read plugin header
-		 * @since 1.0
-		 * @access public
-		 * @param string $value
-		 * @return string | array Value from the pluginheader or array with all values (if no $value is requested)
-		 */
-		protected function get_plugin_data( $value = '' ) {
-			
-			if( empty( $this->plugin_data ) ){
-				
-				if ( ! function_exists( 'get_plugin_data' ) )
-					require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-			
-				$this->plugin_data = get_plugin_data( __FILE__ );
-				
-			}
-			
-			return empty( $value ) ? $this->plugin_data : $this->plugin_data[$value];
-
-		}
-
 		/**
 		 * 
 		 * Caching for the template-classes
@@ -343,6 +307,10 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			add_action( 'personal_options_update', array( &$this, 'save_custom_user_profile_fields' ) );
 			add_action( 'edit_user_profile_update', array( &$this, 'save_custom_user_profile_fields' ) );
 
+			// add a filter to 'request_filesystem_credentials' so we can override the 
+			// request-credentials-formular
+			add_filter( 'request_filesystem_credentials', array( &$this, 'ftp_credentials' ), 1, 0 );
+				
 		}
 		
 		/**
@@ -366,22 +334,22 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			// initialize the vars for the table
 			$args = new stdClass();
 			
-			$args->headline			= __( 'FTP-Account', self::$lang );
+			$args->headline			= __( 'FTP-Account', self::LANG );
 			
 			$args->host_id			= $this->ftp_host;
-			$args->host_label		= __( 'FTP Host&Port', self::$lang );
+			$args->host_label		= __( 'FTP Host&Port', self::LANG );
 			$args->host_value		= esc_attr( $hostname_attr );
-			$args->host_desc		= __( 'Please enter your ftp hostname and port. E.g. <code>mydomain.com:21</code>', self::$lang );
+			$args->host_desc		= __( 'Please enter your ftp hostname and port. E.g. <code>mydomain.com:21</code>', self::LANG );
 			
 			$args->uname_id			= $this->ftp_uname;
-			$args->uname_label		= __( 'FTP Username', self::$lang );
+			$args->uname_label		= __( 'FTP Username', self::LANG );
 			$args->uname_value		= esc_attr( $creds['username'] );
-			$args->uname_desc		= __( 'Please enter your ftp username', self::$lang );
+			$args->uname_desc		= __( 'Please enter your ftp username', self::LANG );
 			
 			$args->ftppass_id		= $this->ftp_pass;
-			$args->ftppass_label	= __( 'FTP Password', self::$lang );
+			$args->ftppass_label	= __( 'FTP Password', self::LANG );
 			$args->ftppass_value	= esc_attr( $creds['password'] );
-			$args->ftppass_desc		= __( 'Please enter your ftp password', self::$lang );
+			$args->ftppass_desc		= __( 'Please enter your ftp password', self::LANG );
 
 			// using the template-engine to print the table
 			$html = $this->get_template_engine( 'html' );
@@ -395,7 +363,9 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 				);
 				
 			} else {
+				
 				$html->print_table_userprofile( $args );
+				
 			}
 
 		}
