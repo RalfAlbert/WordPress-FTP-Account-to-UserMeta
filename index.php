@@ -1,5 +1,5 @@
 <?php
-/**
++/**
  * WordPress Plugin to store ftp-account data in the WordPress database
  *
  * PHP version 5.3
@@ -9,7 +9,7 @@
  * @subpackage FTP-Account to UserMeta
  * @author     Ralf Albert <me@neun12.de>
  * @license    GPLv3 http://www.gnu.org/licenses/gpl-3.0.txt
- * @version    0.1
+ * @version    0.1.2
  * @link       http://wordpress.com
  */
 
@@ -17,7 +17,7 @@
  * Plugin Name:	FTP-Account to UserMeta
  * Plugin URI:	https://github.com/RalfAlbert/WordPress-FTP-Account-to-UserMeta
  * Description:	This plugin add a couple of fields to your user-profile to enter your ftp-account data. This will prevent to re-entering your ftp-account data everytime WordPress request them.
- * Version: 	0.1.1
+ * Version: 	0.1.2
  * Author: 		Ralf Albert
  * Author URI: 	http://yoda.neun12.de
  * Text Domain: ftp2um
