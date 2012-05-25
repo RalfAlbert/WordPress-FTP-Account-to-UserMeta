@@ -419,8 +419,20 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		 */
 		public function ftp_credentials(){
 			
-			$user		= wp_get_current_user();
-			$creds		= unserialize( get_user_meta( $user->ID, self::METAKEY, TRUE ) );
+			global $current_user;
+			
+			// try to get the credentials from the usermeta
+			$creds_from_um = get_user_meta( $current_user->ID, self::METAKEY, TRUE );
+			
+			/*
+			 *  check if any ftp-credentials are stored in usermeta. if not, return an empty string and display
+			 *  the credentials-formular
+			 *  
+			 */
+			if( empty( $creds_from_um ) )
+				return '';
+			else
+				$creds = unserialize( $creds_from_um );
 
 			$req_cred = array(
 			
@@ -433,15 +445,14 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			
 			$req_cred = array_merge( $req_cred, $creds );
 			
-			// check if $req_cred get some empty values. if so, show the formular for ftp-credentials, else return the
-			// credentials from database (usermeta)
-			$empty = FALSE;
+			/*
+			 * if $req_cred contains some empty values, show the formular for ftp-credentials.
+			 * else return the credentials from usermeta
+			 * 
+			 */
 			foreach( $req_cred as $c )
 				if( empty( $c ) )
-					$empty = TRUE;
-				
-			if( TRUE === $empty )
-				$req_cred = '';
+					return '';
 				
 			return $req_cred;
 			
