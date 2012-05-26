@@ -90,13 +90,6 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 		
 		/**
 		 * 
-		 * Array for data from plugin-header
-		 * @var array $plugin_data
-		 */
-		private $plugin_data = array();
-
-		/**
-		 * 
 		 * Container for the different template-engines
 		 * @var object $template_engine
 		 */
