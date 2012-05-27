@@ -199,6 +199,9 @@ if( ! class_exists( 'WP_FTPAcc_to_UM' ) ){
 			// initialize the autoloader
 			self::init_autoloader();
 			
+			// initialize the template-engine to avoid strict-errors
+			self::$template_engine = new stdClass();
+			
 			// load the textdomain
 			load_plugin_textdomain( 
 				self::LANG, 
